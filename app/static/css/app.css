@@ -1,0 +1,13 @@
+/* Minimal custom styles to complement Bootstrap */
+code {
+    word-break: break-all;
+    white-space: normal;
+}
+
+.card {
+    border-color: var(--bs-gray-700);
+}
+
+.alert {
+    border-width: 2px;
+}

@@ -1,10 +1,31 @@
 package managers
 
-type ImageManager struct {
+import (
+	"errors"
+
+	cacheManager "antman-proxy/managers/cache"
+)
+
+type Config struct {
+	CacheManager cacheManager.Manager
 }
 
-func NewManager() *ImageManager {
-	return &ImageManager{}
+type ImageManager struct {
+	cacheManager cacheManager.Manager
+}
+
+func NewManager(cfg *Config) (*ImageManager, error) {
+	if cfg == nil {
+		return nil, errors.New("ImageManager Config is nil!")
+	}
+
+	if cfg.CacheManager == nil {
+		return nil, errors.New("cfg.CacheManager is nil!")
+	}
+
+	return &ImageManager{
+		cacheManager: cfg.CacheManager,
+	}, nil
 }
 
 func (m *ImageManager) IsURLAllowed(imageURL string) bool {

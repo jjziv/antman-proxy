@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -8,21 +9,36 @@ import (
 
 	htmlHandler "antman-proxy/handlers/html"
 	imageHandler "antman-proxy/handlers/image"
+	cacheManager "antman-proxy/managers/cache"
 )
 
 type Config struct {
-	Port         string
+	CacheManager cacheManager.Manager
 	HtmlHandler  htmlHandler.Handler
 	ImageHandler imageHandler.Handler
+	Port         string
 }
 
 type Server struct {
-	router       *gin.Engine
+	cacheManager cacheManager.Manager
 	htmlHandler  htmlHandler.Handler
 	imageHandler imageHandler.Handler
+	router       *gin.Engine
 }
 
 func NewServer(cfg *Config) *http.Server {
+	if cfg.CacheManager == nil {
+		log.Fatal("cfg.CacheManager is nil!")
+	}
+
+	if cfg.HtmlHandler == nil {
+		log.Fatal("cfg.HtmlHandler is nil!")
+	}
+
+	if cfg.ImageHandler == nil {
+		log.Fatal("cfg.ImageHandler is nil!")
+	}
+
 	// Gin router config with custom HTTP configuration and graceful shutdown of the server built-in
 	// Creates a router without any middleware by default
 	router := gin.Default()

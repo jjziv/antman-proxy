@@ -6,15 +6,24 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	html "antman-proxy/handlers/html"
 	image "antman-proxy/handlers/image"
+	cache "antman-proxy/managers/cache"
 	"antman-proxy/server"
 )
 
 func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -22,6 +31,19 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
+	}
+
+	maxAge, err := strconv.ParseInt(os.Getenv("CACHE_MAX_AGE"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cacheManager, err := cache.NewManager(&cache.Config{
+		CacheDir: os.Getenv("CACHE_DIR"),
+		MaxAge:   maxAge,
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	htmlHandler, err := html.NewHandler()
@@ -35,9 +57,10 @@ func main() {
 	}
 
 	s := server.NewServer(&server.Config{
-		Port:         port,
+		CacheManager: cacheManager,
 		HtmlHandler:  htmlHandler,
 		ImageHandler: imageHandler,
+		Port:         port,
 	})
 
 	// Initializing the server in a goroutine so that

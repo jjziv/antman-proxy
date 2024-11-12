@@ -1,17 +1,15 @@
 module antman-proxy
 
-go 1.19
+go 1.21
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-chi/chi/v5 v5.0.7
-	github.com/go-chi/render v1.0.2
 	github.com/golang/mock v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.9.0
 )
 
 require (
-	github.com/ajg/form v1.5.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
