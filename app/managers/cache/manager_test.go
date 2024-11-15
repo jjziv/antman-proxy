@@ -150,6 +150,24 @@ func TestCacheManager_Set(t *testing.T) {
 
 		})
 	}
+
+	t.Run("Expiration", func(t *testing.T) {
+		manager, err := NewManager(&Config{CacheDir: tempDir, MaxAge: 1})
+		if err != nil {
+			t.FailNow()
+		}
+
+		path, err := manager.Set("expiretest", testData, "jpeg")
+		assert.NoError(t, err)
+
+		time.Sleep(2 * time.Second)
+
+		cachedPath := manager.Get("expiretest", "jpeg")
+		assert.Empty(t, cachedPath)
+
+		_, err = os.Stat(path)
+		assert.True(t, os.IsNotExist(err))
+	})
 }
 
 func TestCacheManager_GetPath(t *testing.T) {
@@ -174,6 +192,12 @@ func TestCacheManager_GetPath(t *testing.T) {
 			key:      "test123",
 			format:   "png",
 			expected: filepath.Join(testDir, "test123.png"),
+		},
+		{
+			name:     "webp format",
+			key:      "test123",
+			format:   "webp",
+			expected: filepath.Join(testDir, "test123.webp"),
 		},
 	}
 

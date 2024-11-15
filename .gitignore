@@ -26,3 +26,9 @@ go.work.sum
 
 # JetBrains stuff
 .idea
+
+# Mac OS stuff
+.DS_STORE
+
+# Cached images from app
+image_cache/

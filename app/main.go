@@ -7,21 +7,23 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
 
-	html "antman-proxy/handlers/html"
-	image "antman-proxy/handlers/image"
-	cache "antman-proxy/managers/cache"
+	htmlHandler "antman-proxy/handlers/html"
+	imageHandler "antman-proxy/handlers/image"
+	cacheManager "antman-proxy/managers/cache"
+	imageManager "antman-proxy/managers/image"
 	"antman-proxy/server"
 )
 
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
 
 	// Create context that listens for the interrupt signal from the OS.
@@ -33,12 +35,17 @@ func main() {
 		port = "8080"
 	}
 
+	html, err := htmlHandler.NewHandler()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	maxAge, err := strconv.ParseInt(os.Getenv("CACHE_MAX_AGE"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cacheManager, err := cache.NewManager(&cache.Config{
+	cache, err := cacheManager.NewManager(&cacheManager.Config{
 		CacheDir: os.Getenv("CACHE_DIR"),
 		MaxAge:   maxAge,
 	})
@@ -46,20 +53,27 @@ func main() {
 		log.Fatal(err)
 	}
 
-	htmlHandler, err := html.NewHandler()
+	allowedDomains := strings.Split(os.Getenv("ALLOWED_DOMAINS"), ",")
+	imgManager, err := imageManager.NewManager(&imageManager.Config{
+		AllowedDomains: allowedDomains,
+		CacheManager:   cache,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	imageHandler, err := image.NewHandler()
+	image, err := imageHandler.NewHandler(&imageHandler.Config{
+		ImageManager: imgManager,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	s := server.NewServer(&server.Config{
-		CacheManager: cacheManager,
-		HtmlHandler:  htmlHandler,
-		ImageHandler: imageHandler,
+		HtmlHandler:  html,
+		ImageHandler: image,
+		CacheManager: cache,
+		ImageManager: imgManager,
 		Port:         port,
 	})
 

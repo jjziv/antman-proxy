@@ -10,5 +10,6 @@ test-coverage:
 # Clean up
 clean:
 	rm -f coverage.out
+	rm -rf image_cache/
 	rm -rf managers/cache/image_cache
 	rm -rf managers/cache/test_cache

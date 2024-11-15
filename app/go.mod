@@ -3,9 +3,11 @@ module antman-proxy
 go 1.21
 
 require (
+	github.com/chai2010/webp v1.1.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/stretchr/testify v1.9.0
 )
 

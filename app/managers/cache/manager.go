@@ -1,7 +1,6 @@
 package managers
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -30,7 +29,7 @@ func (m *CacheManager) ensureCacheDir() error {
 
 func NewManager(cfg *Config) (*CacheManager, error) {
 	if cfg == nil {
-		return nil, errors.New("CacheManager config is nil!")
+		return nil, fmt.Errorf("CacheManager config is nil!")
 	}
 
 	if cfg.CacheDir == "" {
@@ -57,11 +56,13 @@ func NewManager(cfg *Config) (*CacheManager, error) {
 func (m *CacheManager) Get(key string, format string) string {
 	path := m.GetPath(key, format)
 
-	if info, err := os.Stat(path); err == nil {
+	info, err := os.Stat(path)
+	if err == nil {
 		if time.Now().Unix()-info.ModTime().Unix() <= m.maxAge {
 			return path
 		}
-		err := os.Remove(path)
+
+		err = os.Remove(path)
 		if err != nil {
 			log.Println(err)
 			return ""

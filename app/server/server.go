@@ -10,25 +10,28 @@ import (
 	htmlHandler "antman-proxy/handlers/html"
 	imageHandler "antman-proxy/handlers/image"
 	cacheManager "antman-proxy/managers/cache"
+	imageManager "antman-proxy/managers/image"
 )
 
 type Config struct {
-	CacheManager cacheManager.Manager
 	HtmlHandler  htmlHandler.Handler
 	ImageHandler imageHandler.Handler
+	CacheManager cacheManager.Manager
+	ImageManager imageManager.Manager
 	Port         string
 }
 
 type Server struct {
-	cacheManager cacheManager.Manager
 	htmlHandler  htmlHandler.Handler
 	imageHandler imageHandler.Handler
+	cacheManager cacheManager.Manager
+	imageManager imageManager.Manager
 	router       *gin.Engine
 }
 
 func NewServer(cfg *Config) *http.Server {
-	if cfg.CacheManager == nil {
-		log.Fatal("cfg.CacheManager is nil!")
+	if cfg == nil {
+		log.Fatal("Server Config is nil!")
 	}
 
 	if cfg.HtmlHandler == nil {
@@ -37,6 +40,14 @@ func NewServer(cfg *Config) *http.Server {
 
 	if cfg.ImageHandler == nil {
 		log.Fatal("cfg.ImageHandler is nil!")
+	}
+
+	if cfg.CacheManager == nil {
+		log.Fatal("cfg.CacheManager is nil!")
+	}
+
+	if cfg.ImageManager == nil {
+		log.Fatal("cfg.ImageManager is nil!")
 	}
 
 	// Gin router config with custom HTTP configuration and graceful shutdown of the server built-in
@@ -53,6 +64,9 @@ func NewServer(cfg *Config) *http.Server {
 
 	router.LoadHTMLGlob("static/templates/*")
 
+	router.GET("/", cfg.HtmlHandler.HandleIndex)
+	router.GET("/resize", cfg.ImageHandler.HandleResize)
+
 	s := &http.Server{
 		Addr:           ":" + cfg.Port,
 		Handler:        router,
@@ -60,9 +74,6 @@ func NewServer(cfg *Config) *http.Server {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
-	router.GET("/", cfg.HtmlHandler.HandleIndex)
-	router.GET("/resize", cfg.ImageHandler.HandleResize)
 
 	return s
 }
