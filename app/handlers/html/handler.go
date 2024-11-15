@@ -14,5 +14,6 @@ func NewHandler() (Handler, error) {
 }
 
 func (h *HtmlHandler) HandleIndex(c *gin.Context) {
+	c.Header("Cache-Control", "public, max-age=300")
 	c.HTML(http.StatusOK, "index.html", nil)
 }
