@@ -3,6 +3,8 @@ package server
 import (
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,7 @@ import (
 	imageHandler "antman-proxy/handlers/image"
 	cacheManager "antman-proxy/managers/cache"
 	imageManager "antman-proxy/managers/image"
+	"antman-proxy/middlewares"
 )
 
 type Config struct {
@@ -61,6 +64,20 @@ func NewServer(cfg *Config) *http.Server {
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())
+
+	router.Use(middlewares.Headers())
+
+	capacity, err := strconv.ParseFloat(os.Getenv("REQUEST_CAPACITY"), 64)
+	if err != nil {
+		capacity = float64(60)
+	}
+
+	refillRate, err := strconv.ParseFloat(os.Getenv("REQUEST_REFILL_RATE"), 64)
+	if err != nil {
+		refillRate = float64(1)
+	}
+
+	router.Use(middlewares.RateLimiter(&middlewares.RateLimiterConfig{Capacity: capacity, RefillRate: refillRate}))
 
 	router.LoadHTMLGlob("static/templates/*")
 
