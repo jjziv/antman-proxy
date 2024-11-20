@@ -23,7 +23,8 @@ import (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		// Should check whether this is dev or production environment and log or throw a fatal appropriately.
+		log.Println("Error loading .env file")
 	}
 
 	// Create context that listens for the interrupt signal from the OS.
