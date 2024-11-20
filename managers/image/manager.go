@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/chai2010/webp"
 	"github.com/nfnt/resize"
@@ -29,6 +30,7 @@ type Config struct {
 type ImageManager struct {
 	allowedDomains []string
 	cacheManager   cacheManager.Manager
+	mu             sync.RWMutex
 }
 
 func NewManager(cfg *Config) (*ImageManager, error) {
@@ -47,10 +49,14 @@ func NewManager(cfg *Config) (*ImageManager, error) {
 	return &ImageManager{
 		allowedDomains: cfg.AllowedDomains,
 		cacheManager:   cfg.CacheManager,
+		mu:             sync.RWMutex{},
 	}, nil
 }
 
 func (m *ImageManager) IsURLAllowed(imageURL string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	parsedURL, err := url.Parse(imageURL)
 	if err != nil {
 		return false
@@ -82,6 +88,9 @@ func calculateDimensions(image image.Image, width, height int) (int, int) {
 }
 
 func (m *ImageManager) ProcessImage(imageURL string, width, height int, format string, quality int) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	cacheKey := m.generateCacheKey(imageURL, width, height, format)
 
 	cached := m.cacheManager.Get(cacheKey, format)

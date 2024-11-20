@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	testURL    = "http://imgur.com/image.jpg"
-	testWidth  = 100
-	testHeight = 100
+	testURL     = "http://imgur.com/image.jpg"
+	testWidth   = 100
+	testHeight  = 100
+	testWorkers = 1
 )
 
 func setupTest(t *testing.T) (*gomock.Controller, *imageManager.MockManager, *gin.Engine) {
@@ -52,6 +53,19 @@ func TestImageHandler_NewHandler(t *testing.T) {
 		assert.Contains(t, err.Error(), "cfg.ImageManager is nil!")
 	})
 
+	t.Run("returns error when worker pool is nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockManager := imageManager.NewMockManager(ctrl)
+		handler, err := NewHandler(&Config{
+			ImageManager: mockManager,
+		})
+		assert.Error(t, err)
+		assert.Nil(t, handler)
+		assert.Contains(t, err.Error(), "cfg.WorkerPool is nil!")
+	})
+
 	t.Run("successfully creates handler", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -59,6 +73,7 @@ func TestImageHandler_NewHandler(t *testing.T) {
 		mockManager := imageManager.NewMockManager(ctrl)
 		handler, err := NewHandler(&Config{
 			ImageManager: mockManager,
+			WorkerPool:   NewWorkerPool(testWorkers),
 		})
 
 		assert.NoError(t, err)
@@ -70,7 +85,7 @@ func TestImageHandler_HandleResize(t *testing.T) {
 	ctrl, mockManager, router := setupTest(t)
 	defer ctrl.Finish()
 
-	handler, err := NewHandler(&Config{ImageManager: mockManager})
+	handler, err := NewHandler(&Config{ImageManager: mockManager, WorkerPool: NewWorkerPool(testWorkers)})
 	require.NoError(t, err)
 
 	router.GET("/resize", handler.HandleResize)
@@ -116,7 +131,7 @@ func TestImageHandler_HandleResize_Success(t *testing.T) {
 		return
 	}
 
-	handler, err := NewHandler(&Config{ImageManager: mockManager})
+	handler, err := NewHandler(&Config{ImageManager: mockManager, WorkerPool: NewWorkerPool(testWorkers)})
 	require.NoError(t, err)
 
 	router.GET("/resize", handler.HandleResize)
@@ -160,7 +175,7 @@ func TestImageHandler_HandleResize_ProcessingError(t *testing.T) {
 	ctrl, mockManager, router := setupTest(t)
 	defer ctrl.Finish()
 
-	handler, err := NewHandler(&Config{ImageManager: mockManager})
+	handler, err := NewHandler(&Config{ImageManager: mockManager, WorkerPool: NewWorkerPool(testWorkers)})
 	require.NoError(t, err)
 
 	router.GET("/resize", handler.HandleResize)

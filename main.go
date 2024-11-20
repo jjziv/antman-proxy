@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	htmlHandler "antman-proxy/handlers/html"
 	imageHandler "antman-proxy/handlers/image"
 	cacheManager "antman-proxy/managers/cache"
@@ -19,10 +21,10 @@ import (
 )
 
 func main() {
-	//err := godotenv.Load(".env")
-	//if err != nil {
-	//	log.Fatal("Error loading .env file")
-	//}
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -60,8 +62,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	numWorkers, _ := strconv.Atoi(os.Getenv("NUM_WORKERS"))
 	image, err := imageHandler.NewHandler(&imageHandler.Config{
 		ImageManager: imgManager,
+		WorkerPool:   imageHandler.NewWorkerPool(numWorkers),
 	})
 	if err != nil {
 		log.Fatal(err)
