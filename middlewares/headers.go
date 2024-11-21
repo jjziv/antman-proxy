@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Returns the headers the service needs in order to enable Browser + CSN caching. Additionally, includes any necessary security headers.
+// Returns the headers the service needs in order to enable Browser + CDN caching. Additionally, includes any necessary security headers.
 func getCdnHeaders(c *gin.Context) map[string]string {
 	headers := map[string]string{
 		"Cache-Control":          "public, max-age=31536000, immutable",
@@ -32,7 +32,3 @@ func Headers() gin.HandlerFunc {
 		}
 	}
 }
-
-// Custom middlewares
-//router.Use(middlewares.Headers())
-//router.Use(middlewares.RateLimiter())

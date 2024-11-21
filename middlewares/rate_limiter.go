@@ -25,7 +25,6 @@ type RateLimiterConfig struct {
 	Client     func(*gin.Context) string // Function to identify clients
 }
 
-// NewRateLimiter creates a new rate limiter instance
 func NewRateLimiter(cfg *RateLimiterConfig) *Limiter {
 	return &Limiter{
 		tokens:        cfg.Capacity,
